@@ -16,7 +16,8 @@
   [fen & {:keys [move-time] :or {move-time 3000}}]
   (let [fen-command  (str "position fen " fen)
         move-command (str "go movetime " move-time)
-        input        (str fen-command "\nd\n" move-command "\n")]
+        padding      (apply str (take 500 (repeat "\n"))) ; nasty hack to stop the stockfish process from closing too early
+        input        (str fen-command "\nd\n" move-command padding)]
     (some-> (shell/sh "stockfish" :in input)
             :out
             s/split-lines

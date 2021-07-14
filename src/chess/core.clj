@@ -19,20 +19,27 @@
         clojure.java.io/resource
         clojure.java.io/reader
         line-seq
-        (map c/fen->board)
         (map print-move)))
   nil)
 
+(defn output-board
+  "Write clean concatenated FEN-like board string to stdout."
+  [fen]
+  (let [state (:state (c/fen->board fen))]
+    (->> state
+         (map #(apply str %))
+         (apply str)
+         println)))
+
 (defn output-game
-  "Write clean concatenated FEN-like board strings move by move to stdout."
+  " move by move to stdout."
   [file]
   (doseq [move (->> file
                     clojure.java.io/resource
                     clojure.java.io/reader
                     line-seq
-                    (map c/fen->board)
-                    (map #(apply str %)))]
-    (println move)
+                    )]
+    (output-board move)
     (Thread/sleep 500)))
 
 (def top-10-games
@@ -48,14 +55,17 @@
    "games/010_anderssen_kieseritzky_1851.fen"])
 
 (defn auto-play
-  [moves]
+  [moves output-format]
   (loop [b c/initial-fen
          n 0]
     (when (< n moves)
-      (newline)
-      (p/print-board b)
+      (if (= :stdout output-format)
+        (do (output-board b)
+            (Thread/sleep 300))
+        (p/print-board b))
       (recur (sf/apply-uci b (sf/best-move b)) (inc n)))))
 
 (defn -main
   [& args]
-  (output-game "games/001_kasparov_topalov_1999.fen"))
+  (auto-play 40 :stdout)
+  #_(output-game "games/001_kasparov_topalov_1999.fen"))

@@ -27,7 +27,7 @@
           (apply str)))))
 
 (defn print-board
-  [board]
+  [fen]
   (doall
-   (map-indexed print-rank board))
-  nil)
+   (map-indexed print-rank (:state (c/fen->board fen))))
+  fen)

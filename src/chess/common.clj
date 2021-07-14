@@ -1,4 +1,5 @@
-(ns chess.common)
+(ns chess.common
+  (:require [clojure.string :as s]))
 
 (def ANSI_RESET "\u001B[0m")
 (def ANSI_BLACK "\u001B[30m")
@@ -27,31 +28,54 @@
 (def initial-fen+3 "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
 
 (def initial-board
-  ["rnbqkbnr"
-   "pppppppp"
-   "        "
-   "        "
-   "        "
-   "        "
-   "PPPPPPPP"
-   "RNBQKBNR"])
+  {:state [(vec "rnbqkbnr")
+           (vec "pppppppp")
+           (vec "        ")
+           (vec "        ")
+           (vec "        ")
+           (vec "        ")
+           (vec "PPPPPPPP")
+           (vec "RNBQKBNR")]
+   :details "w KQkq - 0 1"})
 
 (defn fen-rank->rank
   [fen-rank]
   (-> fen-rank
-      (clojure.string/replace #"1" " ")
-      (clojure.string/replace #"2" "  ")
-      (clojure.string/replace #"3" "   ")
-      (clojure.string/replace #"4" "    ")
-      (clojure.string/replace #"5" "     ")
-      (clojure.string/replace #"6" "      ")
-      (clojure.string/replace #"7" "       ")
-      (clojure.string/replace #"8" "        ")))
+      (s/replace #"1" " ")
+      (s/replace #"2" "  ")
+      (s/replace #"3" "   ")
+      (s/replace #"4" "    ")
+      (s/replace #"5" "     ")
+      (s/replace #"6" "      ")
+      (s/replace #"7" "       ")
+      (s/replace #"8" "        ")
+      vec))
+
+(defn rank->fen-rank
+  [rank]
+  (-> (apply str rank)
+      (s/replace #"        " "8")
+      (s/replace #"       " "7")
+      (s/replace #"      " "6")
+      (s/replace #"     " "5")
+      (s/replace #"    " "4")
+      (s/replace #"   " "3")
+      (s/replace #"  " "2")
+      (s/replace #" " "1")))
 
 (defn fen->board
   [fen]
-  (let [split-fen                          (clojure.string/split fen #"[ \/]")
-        fen-ranks                          (take 8 split-fen)
-        [active-player castling en-passant
-         half-move-clock full-move-number] (drop 8 split-fen)]
-    (map fen-rank->rank fen-ranks)))
+  (let [split-fen (s/split fen #"[ \/]")
+        fen-ranks (take 8 split-fen)
+        details   (drop 8 split-fen)]
+    {:state   (mapv fen-rank->rank fen-ranks)
+     :details details}))
+
+(defn board->fen
+  [{:keys [state details]}]
+  (str
+   (->> state
+        (map rank->fen-rank)
+        (s/join "/"))
+   " "
+   details))

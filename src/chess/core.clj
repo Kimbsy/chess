@@ -1,14 +1,15 @@
 (ns chess.core
   (:require [chess.common :as c]
-            [chess.printing :as p])
+            [chess.printing :as p]
+            [chess.stockfish :as sf])
   (:gen-class))
 
 (defn print-move
-  [board]
+  [fen]
   (Thread/sleep 500)
   (dotimes [_ 80]
     (newline))
-  (p/print-board board)
+  (p/print-board fen)
   nil)
 
 (defn print-game
@@ -19,7 +20,6 @@
         clojure.java.io/reader
         line-seq
         (map c/fen->board)
-
         (map print-move)))
   nil)
 
@@ -46,6 +46,15 @@
    "games/008_tal_larsen_1965.fen"
    "games/009_krasenkow_nakamura_2007.fen"
    "games/010_anderssen_kieseritzky_1851.fen"])
+
+(defn auto-play
+  [moves]
+  (loop [b c/initial-fen
+         n 0]
+    (when (< n moves)
+      (newline)
+      (p/print-board b)
+      (recur (sf/apply-uci b (sf/best-move b)) (inc n)))))
 
 (defn -main
   [& args]

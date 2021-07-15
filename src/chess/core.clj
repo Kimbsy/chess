@@ -65,7 +65,25 @@
         (p/print-board b))
       (recur (sf/apply-uci b (sf/best-move b)) (inc n)))))
 
+(defn loop-auto
+  [output-format]
+  (loop [b    c/initial-fen
+         n    0
+         prev nil]
+    (let [new (sf/apply-uci b (sf/best-move b))]
+      (if (= prev new)
+        (do
+          (Thread/sleep 1000)
+          (recur c/initial-fen 0 nil))
+        (do
+          (if (= :stdout output-format)
+            (do (output-board b)
+                (Thread/sleep 300))
+            (p/print-board b))
+          (recur new (inc n) b))))))
+
 (defn -main
   [& args]
-  (auto-play 40 :stdout)
+  (loop-auto :stdout)
+  #_(auto-play 40 :stdout)
   #_(output-game "games/001_kasparov_topalov_1999.fen"))
